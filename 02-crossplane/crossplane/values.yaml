@@ -1,0 +1,8 @@
+upbound:
+  aws:
+    version: v1.3.1
+
+accountID: ''
+config:
+  upbound: false 
+  opensearch: false
