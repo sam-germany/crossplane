@@ -1,6 +1,5 @@
-test
-----
-apiVersion: pkg.crossplane.io/v1
+
+    apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: provider-aws
@@ -25,6 +24,18 @@ spec:
   credentials:
     source: InjectedIdentity
 ---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-aws-s3
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "2" # Sync after XRD
+spec:
+  package: "xpkg.upbound.io/upbound/provider-aws-s3:{{ .Values.upbound.aws.version }}"
+  controllerConfigRef:
+    name: aws-config
+---    
 apiVersion: pkg.crossplane.io/v1alpha1
 kind: ControllerConfig
 metadata:
@@ -33,5 +44,3 @@ metadata:
     eks.amazonaws.com/role-arn: {{ .Values.providerConfigs.default.roleARN }}
     argocd.argoproj.io/sync-wave: "1" # Sync after XRD
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-
-    
