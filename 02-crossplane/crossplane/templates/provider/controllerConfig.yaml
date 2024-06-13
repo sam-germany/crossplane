@@ -1,8 +1,0 @@
-apiVersion: pkg.crossplane.io/v1alpha1
-kind: ControllerConfig
-metadata:
-  name: aws-config
-  annotations:
-    eks.amazonaws.com/role-arn: "" # {{ .Values.providerConfigs.default.roleARN }}
-    argocd.argoproj.io/sync-wave: "1" # Sync after XRD
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
