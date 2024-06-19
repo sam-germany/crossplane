@@ -1,0 +1,26 @@
+apiVersion: infra.rwil.volkswagenag.com/v1alpha1
+kind: XSecurityGroup
+metadata:
+  name: {{ $.observed.composite.resource.spec.network.securityGroup.name }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    gotemplating.fn.crossplane.io/composition-resource-name: sg
+spec:
+  compositionRevisionSelector:
+    matchLabels:
+      infra.rwil.volkswagenag.com/revision-state: stable
+  stage: default
+  name: {{ $.observed.composite.resource.spec.network.securityGroup.name }}
+  {{- if $.observed.composite.resource.spec.network.securityGroup.id}}
+  id: {{ $.observed.composite.resource.spec.network.securityGroup.id }}
+  {{- end }}
+  selector:
+    rds: {{ $.observed.composite.resource.spec.databaseName }}
+    stage: default
+  rules:
+    - cidrIPv4: 0.0.0.0/0
+      description: outbound traffic
+      fromPort: 0
+      toPort: 0
+      type: egress
+    {{- $.observed.composite.resource.spec.network.securityGroup.rules | toYaml | nindent 4 }}

@@ -1,0 +1,59 @@
+{{- range .Values.crossplane.xs3.resources }}
+---
+apiVersion: infra.sunny.com/v1alpha1
+kind: XS3
+metadata:
+  name: {{ .name }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  # Bucket
+  name: {{ .externalName }}
+
+  {{- if .objectLockEnabled}}
+  objectLockEnabled: false
+  {{- end}}
+
+  # Tags
+  {{- if .tags }}
+  tags: 
+    {{ .tags | toYaml | indent 4 | trim }}
+  {{- end}}
+  
+  # BucketVersioning
+  {{- if .versioningConfiguration}}
+  versioningConfiguration:
+    status: {{ .versioningConfiguration.status }}
+  {{- end}}
+
+  # BucketServerSideEncryptionConfiguration
+  {{- if .serverSideEncryption}}
+  serverSideEncryption: #  Set of server-side encryption configuration rules. Currently, only a single rule is supported.
+    bucketKeyEnabled: {{ .serverSideEncryption.bucketKeyEnabled }}
+    kmsMasterKeyId: {{ .serverSideEncryption.kmsMasterKeyId }}
+    sseAlgorithm: {{ .serverSideEncryption.sseAlgorithm }}
+  {{- end}}
+  
+
+  # BucketPublicAccessBlock
+  {{- if .publicAccessBlock}}
+  publicAccessBlock:
+    blockPublicAcls: {{ .publicAccessBlock.blockPublicAcls}}
+    blockPublicPolicy: {{ .publicAccessBlock.blockPublicPolicy}}
+    ignorePublicAcls: {{ .publicAccessBlock.ignorePublicAcls}}
+    restrictPublicBuckets: {{ .publicAccessBlock.restrictPublicBuckets}}
+  {{- end}}
+
+  # BucketPolicy
+  {{- if .policy}}
+  policy: |
+    {{- .policy | toYaml | nindent 4}}
+  {{- end}}
+
+  {{- if .storageTransitionConfig }}
+  storageTransitionConfig:
+    enabled: {{ .storageTransitionConfig.enabled }}
+    rules:
+{{ .storageTransitionConfig.rules | toYaml | indent 6}}
+  {{- end }}
+{{- end}}

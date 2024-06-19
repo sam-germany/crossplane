@@ -1,0 +1,20 @@
+{{- if ( .observed.composite.resource.spec.policy )}}
+---
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: BucketPolicy
+metadata:
+  name: {{ (.observed.composite.resource.spec.name )}}-policy
+  annotations:
+    gotemplating.fn.crossplane.io/composition-resource-name: policy
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    bucketSelector:
+      matchControllerRef: true
+    policy: |
+{{ ( .observed.composite.resource.spec.policy ) | indent 6 | println}}
+    region: ap-southeast-1
+  providerConfigRef:
+    name: creds
+
+{{- end }}

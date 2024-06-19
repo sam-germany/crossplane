@@ -1,0 +1,72 @@
+{{- if and
+        (eq ( $.observed.resources.oldsecretobject | getResourceCondition "Ready").Status "True")
+        (eq ( $.observed.resources.existingsecretobject | getResourceCondition "Ready").Status "True")
+}}
+
+{{- $oldExternalSecret := (hasKey $.observed.resources.oldsecretobject.connectionDetails "externalpasswordold") -}}
+{{- $existingExternalSecret := (hasKey $.observed.resources.existingsecretobject.connectionDetails "externalpasswordexisting") -}}
+
+# Get Namespace
+{{- $ns := index $.observed.composite.resource.metadata.labels "crossplane.io/claim-namespace" }}
+apiVersion: postgresql.sql.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: {{ ($.observed.composite.resource.metadata.name) }}-role
+  annotations:
+    gotemplating.fn.crossplane.io/composition-resource-name: role
+    crossplane.io/external-name: {{ ($.observed.composite.resource.spec.username) }}
+spec:
+  {{- if $.observed.composite.resource.spec.management.options.deletion }}
+  deletionPolicy: Delete
+  {{- else }}
+  deletionPolicy: Orphan
+  {{- end }}
+  forProvider:
+    privileges:
+      bypassRls: false
+      createDb: false
+      createRole: false
+      inherit: false
+      login: true
+      replication: false
+      superUser: false
+# If existing secret was found, use it
+{{- if $existingExternalSecret }}
+    passwordSecretRef:
+      name: rds-operator-{{ (.observed.composite.resource.metadata.name) }}-existing-secret
+      namespace: {{ $ns }}
+      key: password
+# If existing secret was not found, but old secret was found, use it
+{{- else if $oldExternalSecret }}
+    passwordSecretRef:
+      name: rds-operator-{{ (.observed.composite.resource.metadata.name) }}-old-secret
+      namespace: {{ $ns }}
+      key: password
+{{- end }}
+  providerConfigRef:
+    name: {{ (.observed.composite.resource.spec.providerName) }}
+  writeConnectionSecretToRef:
+    name: {{ (.observed.composite.resource.metadata.name) }}-role
+    namespace: crossplane-system
+---
+apiVersion: postgresql.sql.crossplane.io/v1alpha1
+kind: Grant
+metadata:
+  name: {{ (.observed.composite.resource.metadata.name) }}-grant
+  annotations:
+    gotemplating.fn.crossplane.io/composition-resource-name: grant
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    databaseSelector:
+      matchControllerRef: true
+    roleSelector:
+      matchControllerRef: true
+    privileges:
+      - CONNECT
+      - CREATE
+      - TEMPORARY
+    withOption: GRANT
+  providerConfigRef:
+    name: {{ (.observed.composite.resource.spec.providerName) }}
+{{- end }}

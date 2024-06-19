@@ -46,6 +46,7 @@ resource "aws_iam_policy" "crossplane-policy" {
   })
 }
 
+
 resource "aws_iam_role_policy_attachment" "example_attach_1" {
   role       = aws_iam_role.crossplane-role.name
   policy_arn = aws_iam_policy.crossplane-policy.arn
@@ -65,3 +66,4 @@ resource "aws_iam_role_policy_attachment" "example_attach_4" {
   role       = aws_iam_role.crossplane-role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonVPCFullAccess"
 }
+

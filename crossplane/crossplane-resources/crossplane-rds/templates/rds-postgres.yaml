@@ -1,0 +1,14 @@
+{{- /*
+ {{- range $_, $item := $.Values.crossplane.xrdspostgres.resources }}
+---
+apiVersion: infra.sunny.com/v1alpha1
+kind: XRDSPostgre
+metadata:
+  name: {{ .resourceName }}
+#  namespace: {{ $.Release.Namespace }}
+ # annotations:
+ #   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  {{- $item.spec | toYaml | nindent 2 }}
+{{- end }} 
+*/ -}}

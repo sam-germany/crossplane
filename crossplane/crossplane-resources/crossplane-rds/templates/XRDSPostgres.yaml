@@ -1,0 +1,25 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xrdspostgres
+  labels:
+    crossplane.io/xrd: xrdspostgres.infra.sunny.com
+#  annotations:
+#    argocd.argoproj.io/sync-wave: "-1" # Sync after XRD
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: infra.sunny.com/v1alpha1
+    kind: XRDSPostgre
+  mode: Pipeline
+  pipeline:
+    - step: render-rds-instance
+      functionRef:
+        name: function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{ (.Files.Get "files/composition/rds/instance.tmpl") | nindent 12 }}

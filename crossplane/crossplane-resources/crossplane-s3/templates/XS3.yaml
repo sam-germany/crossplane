@@ -1,0 +1,117 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+#  annotations:
+#    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    crossplane.io/xrd: xs3s.infra.sunny.com
+  name: xs3s
+spec:
+  compositeTypeRef:
+    apiVersion: infra.sunny.com/v1alpha1
+    kind: XS3
+  mode: Pipeline
+#  writeConnectionSecretsToNamespace: crossplane-system
+  pipeline:
+    # - step: my-bucket-creation
+    #   functionRef:
+    #     name: function-patch-and-transform
+    #   input: 
+    #     apiVersion: pt.fn.crossplane.io/v1beta1
+    #     kind: Resources
+    #     resources:
+    #       - name: my-bucket-sunny
+    #         base:
+    #           apiVersion: s3.aws.upbound.io/v1beta1
+    #           kind: Bucket
+    #           metadata: 
+    #             name: exaple-bucket-sunny
+    #           spec:
+    #             forProvider:
+    #               region: ap-southeast-1  
+    #             providerConfigRef:
+    #               name: creds    
+    - step: render-bucket
+      functionRef:
+        name: function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{- ( .Files.Get "files/bucket.tmpl") | nindent 12 }}
+
+    - step: patch-and-transform
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        environment: null
+        kind: Resources
+        patchSets: []
+        resources:
+        - name: bucket
+          patches:
+          - fromFieldPath: status.atProvider.arn
+            toFieldPath: status.bucketArn
+            type: ToCompositeFieldPath
+  
+
+    - step: render-storageTransitionConfiguration
+      functionRef:
+        name: function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{- ( .Files.Get "files/storageTransitionConfiguration.tmpl") | nindent 12 }}
+
+    - step: render-serverSideEncryption
+      functionRef:
+        name: function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{- ( .Files.Get "files/serverSideEncryption.tmpl") | nindent 12 }}
+
+    - step: render-bucketVersioning
+      functionRef:
+        name: function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{- ( .Files.Get "files/bucketVersioning.tmpl") | nindent 12 }}
+
+    - step: render-bucketPublicAccessBlock
+      functionRef:
+        name: function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{- ( .Files.Get "files/bucketPublicAccessBlock.tmpl") | nindent 12 }}
+
+    - step: render-bucketPolicy
+      functionRef:
+        name: function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{- ( .Files.Get "files/bucketPolicy.tmpl") | nindent 12 }}
+    - step: ready
+      functionRef:
+        name: function-auto-ready 

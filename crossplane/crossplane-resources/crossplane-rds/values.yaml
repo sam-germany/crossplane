@@ -1,0 +1,39 @@
+crossplane:
+  xrdspostgres:
+    resources:
+    - resourceName: my-postgres-db
+      spec:
+        databaseName: sunnydbinstance
+        sqlProviderConfigName: mydat
+        secretsManager:
+          pathName: /kes/global/rds/mydat
+        subnetGroup:
+          name: db_subnet_group
+#        subnetGroup: 
+#          tier: pod
+        masterUsername: postgres
+        deletionProtection: true
+        caCertIdentifier: "rds-ca-rsa2048-g1"
+        dbms:
+          version: '13.13'
+          multiAZ: false
+          availabilityZone: eu-west-1
+        network:
+          securityGroup:
+     #       id: sg-
+            name: "rds-mydat-sg"
+            rules:
+              - cidrIPv4: 11.240.144.0/24
+                fromPort: 5432
+                toPort: 5432
+                type: ingress 
+              - cidrIPv4: 100.64.0.0/16
+                fromPort: 5432
+                toPort: 5432
+                type: ingress 
+        compute:
+          instanceClass: db.t4g.micro
+        storage:
+          encryption: false
+          allocatedStorage: 20
+          storageType: gp3

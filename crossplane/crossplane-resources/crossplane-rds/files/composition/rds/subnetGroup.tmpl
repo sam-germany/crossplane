@@ -1,0 +1,16 @@
+{{- with .observed.composite.resource }}
+apiVersion: rds.aws.upbound.io/v1beta1
+kind: SubnetGroup
+metadata:
+  name: {{ .spec.databaseName }}
+  annotations:
+    crossplane.io/external-name: {{ .spec.databaseName }}
+    gotemplating.fn.crossplane.io/composition-resource-name: subnet-group
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    region: eu-west-1
+    subnetIdSelector:
+      matchLabels:
+        infra.rwil.volkswagenag.com/subnet-tier: {{ .spec.subnetGroup.tier | default "database" }}
+{{- end }}

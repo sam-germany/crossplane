@@ -1,0 +1,24 @@
+crossplane:
+  xs3:
+    resources:
+    - name: my-bucket-aaaabcd
+      externalName: my-bucket-aaaabc
+      objectLockEnabled: false
+      storageTransitionConfig:
+        enabled: true
+        rules:
+          - status: Enabled 
+            id: my-default-rule
+            transition: 
+              - days: 30 
+                storageClass: INTELLIGENT_TIERING 
+      tags: 
+        CreatedBy: sunny
+        Description: ddd
+        CreatorId: id
+      versioningConfiguration:
+        status: Disabled 
+      serverSideEncryption: 
+        bucketKeyEnabled: false 
+        sseAlgorithm: aws:kms      
+        kmsMasterKeyId: ww

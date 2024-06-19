@@ -1,0 +1,23 @@
+{{- if ( .observed.composite.resource.spec.publicAccessBlock )}}
+
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: BucketServerSideEncryptionConfiguration
+metadata:
+  name: {{ (.observed.composite.resource.spec.name )}}-encryption
+  annotations:
+    gotemplating.fn.crossplane.io/composition-resource-name: encryption
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    bucketSelector:
+      matchControllerRef: true
+    region: ap-southeast-1
+    rule:
+      - applyServerSideEncryptionByDefault:
+          - sseAlgorithm: {{ ( .observed.composite.resource.spec.serverSideEncryption.sseAlgorithm )}}
+            kmsMasterKeyId: {{ ( .observed.composite.resource.spec.serverSideEncryption.kmsMasterKeyId )}}
+        bucketKeyEnabled: {{ ( .observed.composite.resource.spec.serverSideEncryption.bucketKeyEnabled )}}
+  providerConfigRef:
+    name: creds
+
+{{- end }}

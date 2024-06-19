@@ -1,0 +1,86 @@
+{{- if and
+          (eq ( $.observed.resources.externalsecret | getResourceCondition "Ready").Status "True")
+          (hasKey $.observed.resources.externalsecret.connectionDetails "externalpassword" )
+           }}
+
+{{- with .observed.composite.resource }}
+apiVersion: rds.aws.upbound.io/v1beta2
+kind: Instance
+metadata:
+  name: {{ .spec.databaseName }}-rds
+  annotations:
+    gotemplating.fn.crossplane.io/composition-resource-name: instance
+    crossplane.io/external-name: {{ .spec.databaseName }}
+spec:
+  providerConfigRef:
+    name: creds
+  deletionPolicy: Delete
+  managementPolicies:
+    - Observe
+    - Update
+    - Create
+    - LateInitialize
+  forProvider:
+    allocatedStorage: {{ or .spec.storage.allocatedStorage 20 }}
+    {{- if .spec.storage.maxAllocatedStorage }}
+    maxAllocatedStorage: {{ .spec.storage.maxAllocatedStorage }}
+    {{- end }}
+    applyImmediately: true
+    autoMinorVersionUpgrade: {{ or .spec.dbms.autoMinorVersionUpgrade "false" }}
+    backupRetentionPeriod: {{ or .spec.storage.backupRetentionPeriod 7 }}
+    {{- if .spec.caCertIdentifier }}
+    caCertIdentifier: {{ .spec.caCertIdentifier }}
+    {{- end }}
+    copyTagsToSnapshot: {{ or .spec.snapshots.copyTagsToSnapshot "true" }}
+    deletionProtection: {{ or .spec.deletionProtection "true" }}
+    identifier: {{ .spec.databaseName }}
+    engine: {{ or .spec.dbms.engine "postgres"}}
+    engineVersion: {{ .spec.dbms.version | quote }}
+    # Before a database is deleted, a snapshot is created
+    skipFinalSnapshot: false
+    # This field specifies the name of the snapshot
+    {{- if .spec.snapshots.finalSnapshotId }}
+    finalSnapshotIdentifier: {{ .spec.snapshots.finalSnapshotId }}
+    {{- else }}
+    finalSnapshotIdentifier: {{ .spec.databaseName }}-rds-snapshot
+    {{- end }}
+    {{- if .spec.snapshots.restoreFromSnapshotId }}
+    snapshotIdentifier: {{ .spec.snapshots.restoreFromSnapshotId }}
+    {{- end }}
+    iamDatabaseAuthenticationEnabled: false
+    instanceClass: {{ or .spec.compute.instanceClass "db.t3.small" }}
+    licenseModel: postgresql-license
+    username: {{ .spec.masterUsername }}
+    {{- if .spec.dbms.multiAZ | quote }}
+    multiAz: {{ .spec.dbms.multiAZ }}
+    {{- end }}
+    {{- if .spec.dbms.availabilityZone}}
+    availabilityZone: {{ .spec.dbms.availabilityZone }}
+    {{- end }}
+    passwordSecretRef:
+      # If the secret was successfully synced, the password is used accordingly
+      key: password
+      name: rds-{{ .spec.databaseName }}-external-secret
+      namespace: crossplane-system
+    performanceInsightsEnabled: true
+    port: 5432
+    publiclyAccessible: false
+    region: eu-west-1
+    storageEncrypted: {{ .spec.storage.encryption }}
+    storageType: {{ or .spec.storage.storageType "gp3" }}
+    {{- if .spec.subnetGroup.name }}
+    dbSubnetGroupName: {{ .spec.subnetGroup.name }}
+    {{- end }}
+    {{- if .spec.subnetGroup.tier }}
+    dbSubnetGroupNameSelector:
+      matchControllerRef: true
+    {{- end }}
+    vpcSecurityGroupIdSelector:
+      matchLabels:
+        infra.rwil.volkswagenag.com/rds: {{ $.observed.composite.resource.spec.databaseName }}
+        infra.rwil.volkswagenag.com/stage: default
+  writeConnectionSecretToRef:
+    namespace: crossplane-system
+    name: rds-{{ .spec.databaseName }}-parameter-secret
+{{- end }}
+{{- end }}

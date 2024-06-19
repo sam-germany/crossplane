@@ -1,0 +1,17 @@
+---
+apiVersion: postgresql.sql.crossplane.io/v1alpha1
+kind: Database
+metadata:
+  name: {{ (.observed.composite.resource.metadata.name) }}-db
+  annotations:
+    gotemplating.fn.crossplane.io/composition-resource-name: database
+    crossplane.io/external-name: {{ ($.observed.composite.resource.spec.username) }}
+spec:
+  {{- if $.observed.composite.resource.spec.management.options.deletion }}
+  deletionPolicy: Delete
+  {{- else }}
+  deletionPolicy: Orphan
+  {{- end }}
+  forProvider: {}
+  providerConfigRef:
+    name: {{ (.observed.composite.resource.spec.providerName) }}

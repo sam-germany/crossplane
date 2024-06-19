@@ -1,0 +1,21 @@
+{{- if ( .observed.composite.resource.spec.publicAccessBlock )}}
+---
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: BucketPublicAccessBlock
+metadata:
+  name: {{ (.observed.composite.resource.spec.name )}}-access-block
+  annotations:
+    gotemplating.fn.crossplane.io/composition-resource-name: accessBlock
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    blockPublicAcls: {{ ( .observed.composite.resource.spec.publicAccessBlock.blockPublicAcls ) }}
+    blockPublicPolicy: {{ ( .observed.composite.resource.spec.publicAccessBlock.blockPublicPolicy ) }}
+    bucketSelector:
+      matchControllerRef: true
+    ignorePublicAcls: {{ (.observed.composite.resource.spec.publicAccessBlock.ignorePublicAcls) }}
+    region: ap-southeast-1
+    restrictPublicBuckets: {{ (.observed.composite.resource.spec.publicAccessBlock.restrictPublicBuckets) }}
+  providerConfigRef:
+    name: creds    
+{{- end }}

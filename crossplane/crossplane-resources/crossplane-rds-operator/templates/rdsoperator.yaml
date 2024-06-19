@@ -1,0 +1,15 @@
+{{- $top := . }}
+{{- range .Values.crossplane.xrdsoperator.instances }}
+---
+apiVersion: infra.rwil.volkswagenag.com/v1alpha1
+kind: RDSOperator
+metadata:
+  name: {{ .dbName }}-{{ .username }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  dbName: {{ .dbName }}
+  username: {{ .username }}
+  secretPath: {{ .secretPath }}
+  providerName: {{ .providerName }}
+{{- end }}

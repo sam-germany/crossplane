@@ -1,0 +1,19 @@
+{{- if and
+  ($.observed.composite.resource.spec.sqlProviderConfigName)
+  (eq ( $.observed.resources.instance | getResourceCondition "Ready").Status "True") }}
+
+apiVersion: postgresql.sql.crossplane.io/v1alpha1
+kind: ProviderConfig
+metadata:
+  name: {{ .observed.composite.resource.spec.sqlProviderConfigName }}
+  annotations:
+    gotemplating.fn.crossplane.io/composition-resource-name: sql-provider-config
+    gotemplating.fn.crossplane.io/ready: "True"
+spec:
+  sslMode: require
+  credentials:
+    source: PostgreSQLConnectionSecret
+    connectionSecretRef:
+      namespace: crossplane-system
+      name: {{ $.observed.composite.resource.metadata.uid }}
+{{- end }}

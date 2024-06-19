@@ -1,0 +1,22 @@
+# Check the status of an external secret.
+#
+# The first argument is the manifest of the external secret object
+# (example: $.observed | dig "resources" "secret-object" "resource" "status" "atProvider" "manifest" nil)
+#
+# Returns nil if the status is not as expected.
+# Otherwise it returns "true".
+#
+# Example usage:
+# $secretReady := (include "check.status.externalsecret" (list $secretManifest (list "SecretSynced" "SecretSyncedError")))
+{{- define "check.status.externalsecret" }}
+  {{- $manifest := index . 0 }}
+  {{- $statusReason := index . 1 }}
+  {{- if (($manifest).status).conditions }}
+    {{- range $_, $value := $manifest.status.conditions }}
+      {{- if (and (eq $value.type "Ready") (has $value.reason $statusReason)) }}
+true
+      {{- break }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}

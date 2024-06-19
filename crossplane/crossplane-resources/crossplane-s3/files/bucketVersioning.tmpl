@@ -1,0 +1,20 @@
+{{- if ( .observed.composite.resource.spec.versioningConfiguration )}}
+---
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: BucketVersioning
+metadata:
+  name: {{ (.observed.composite.resource.spec.name )}}-versioning
+  annotations:
+    gotemplating.fn.crossplane.io/composition-resource-name: versioning
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    bucketSelector:
+      matchControllerRef: true
+    region: ap-southeast-1
+    versioningConfiguration:
+      - status: {{ (.observed.composite.resource.spec.versioningConfiguration.status) }}
+  providerConfigRef:
+    name: creds
+
+{{- end }}

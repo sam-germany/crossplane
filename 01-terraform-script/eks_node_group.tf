@@ -1,6 +1,6 @@
 resource "aws_instance" "kubectl-server" {
-  ami                         = "ami-063e1495af50e6fd5"
-  key_name                    = "mykey"
+  ami                         = "ami-0ea747dda13fbe2c1"
+  key_name                    = "mykey-euwest"
   instance_type               = "t2.micro"
   associate_public_ip_address = true
   subnet_id                   = aws_subnet.public-1.id
@@ -22,7 +22,7 @@ resource "aws_eks_node_group" "node-grp" {
   instance_types  = ["t2.small"]
 
   remote_access {
-    ec2_ssh_key               = "mykey"
+    ec2_ssh_key               = "mykey-euwest"
     source_security_group_ids = [aws_security_group.allow_tls.id]
   }
 

@@ -1,0 +1,172 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xs3s.infra.sunny.com
+  annotations:
+  #  argocd.argoproj.io/sync-wave: "-2" # Sync first
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "0"    
+spec:
+  group: infra.sunny.com
+  names:
+    kind: XS3
+    plural: xs3s
+  claimNames:
+    kind: S3
+    plural: s3s
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          description: crossplane-s3
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+
+                name: 
+                  type: string
+
+                objectLockEnabled:
+                  type: boolean
+
+                versioningConfiguration:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                  required:
+                    - status
+
+                serverSideEncryption:
+                  type: object
+                  properties: 
+                    bucketKeyEnabled: 
+                      type: boolean
+                    kmsMasterKeyId:
+                      type: string
+                    sseAlgorithm:
+                      type: string
+                  required:
+                    - bucketKeyEnabled
+                    - kmsMasterKeyId
+                    - sseAlgorithm
+
+                policy:
+                  type: string
+
+                publicAccessBlock:
+                  type: object
+                  properties:
+                    blockPublicAcls:
+                      type: boolean
+                    blockPublicPolicy:
+                      type: boolean
+                    ignorePublicAcls:
+                      type: boolean
+                    restrictPublicBuckets:
+                      type: boolean
+                  required:
+                    - blockPublicAcls
+                    - blockPublicPolicy
+                    - ignorePublicAcls
+                    - restrictPublicBuckets
+
+                tags:
+                  type: object
+                  properties:
+                    CreatorId:
+                      type: string
+                    CreatedBy:
+                      type: string
+                    Description:
+                      type: string
+                  required:
+                    - CreatorId
+                    - CreatedBy
+                    - Description
+
+                storageTransitionConfig:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    rules:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          status:
+                            type: string
+                          id:
+                            type: string
+                          transition:
+                            type: array
+                            items:
+                              properties:
+                                date:
+                                  type: string
+                                days:
+                                  type: number
+                                storageClass:
+                                  type: string
+                              type: object
+                          expiration:
+                            items:
+                              properties:
+                                date:
+                                  type: string
+                                days:
+                                  type: number
+                                expiredObjectDeleteMarker:
+                                  type: boolean
+                              type: object
+                            type: array
+                          filter:
+                            items:
+                              properties:
+                                and:
+                                  items:
+                                    properties:
+                                      objectSizeGreaterThan:
+                                        type: number
+                                      objectSizeLessThan:
+                                        type: number
+                                      prefix:
+                                        type: string
+                                      tags:
+                                        additionalProperties:
+                                          type: string
+                                        type: object
+                                        x-kubernetes-map-type: granular
+                                    type: object
+                                  type: array
+                                objectSizeGreaterThan:
+                                  type: string
+                                objectSizeLessThan:
+                                  type: string
+                                prefix:
+                                  type: string
+                                tag:
+                                  items:
+                                    properties:
+                                      key:
+                                        type: string
+                                      value:
+                                        type: string
+                                    type: object
+                                  type: array
+                              type: object
+                            type: array
+              required:
+                - name
+
+                
+            status:
+              type: object
+              properties:
+                bucketArn:
+                  type: string

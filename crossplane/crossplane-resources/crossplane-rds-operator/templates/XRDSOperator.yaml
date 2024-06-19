@@ -1,0 +1,98 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    crossplane.io/xrd: xrdsoperator.infra.rwil.volkswagenag.com
+  name: xrdsoperator
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: infra.rwil.volkswagenag.com/v1alpha1
+    kind: XRDSOperator
+  mode: Pipeline
+  pipeline:
+  - step: render-database
+    functionRef:
+      name: function-go-templating
+    input:
+      apiVersion: gotemplating.fn.crossplane.io/v1beta1
+      kind: GoTemplate
+      source: Inline
+      inline:
+        template: |
+{{ (.Files.Get "files/composition/database.tmpl") | indent 12 }}
+
+  - step: render-old-secret
+    functionRef:
+      name: function-go-templating
+    input:
+      apiVersion: gotemplating.fn.crossplane.io/v1beta1
+      kind: GoTemplate
+      source: Inline
+      inline:
+        template: |
+{{ (.Files.Get "files/composition/helper.tmpl") | indent 12 }}
+{{ (.Files.Get "files/composition/oldSecret.tmpl") | indent 12 }}
+
+  - step: render-existing-secret
+    functionRef:
+      name: function-go-templating
+    input:
+      apiVersion: gotemplating.fn.crossplane.io/v1beta1
+      kind: GoTemplate
+      source: Inline
+      inline:
+        template: |
+{{ (.Files.Get "files/composition/existingSecret.tmpl") | indent 12 }}
+
+  - step: render-role
+    functionRef:
+      name: function-go-templating
+    input:
+      apiVersion: gotemplating.fn.crossplane.io/v1beta1
+      kind: GoTemplate
+      source: Inline
+      inline:
+        template: |
+{{ (.Files.Get "files/composition/helper.tmpl") | indent 12 }}
+{{ (.Files.Get "files/composition/role.tmpl") | indent 12 }}
+
+  - step: render-connection-details
+    functionRef:
+      name: function-go-templating
+    input:
+      apiVersion: gotemplating.fn.crossplane.io/v1beta1
+      kind: GoTemplate
+      source: Inline
+      inline:
+        template: |
+{{ (.Files.Get "files/composition/connectionDetails.tmpl") | indent 12 }}
+
+  - step: render-secret
+    functionRef:
+      name: function-go-templating
+    input:
+      apiVersion: gotemplating.fn.crossplane.io/v1beta1
+      kind: GoTemplate
+      source: Inline
+      inline:
+        template: |
+{{ (.Files.Get "files/composition/secret.tmpl") | indent 12 }}
+
+  - step: render-secret-version
+    functionRef:
+      name: function-go-templating
+    input:
+      apiVersion: gotemplating.fn.crossplane.io/v1beta1
+      kind: GoTemplate
+      source: Inline
+      inline:
+        template: |
+{{ (.Files.Get "files/composition/secretVersion.tmpl") | indent 12 }}
+
+  # Ready Function
+  - step: ready
+    functionRef:
+      name: function-auto-ready

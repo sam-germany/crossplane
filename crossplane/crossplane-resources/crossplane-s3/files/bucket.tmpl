@@ -1,0 +1,26 @@
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: Bucket
+metadata:
+  name: {{ $.observed.composite.resource.spec.name }}
+  annotations:
+    gotemplating.fn.crossplane.io/composition-resource-name: bucket
+    crossplane.io/external-name: {{ $.observed.composite.resource.spec.name }}
+  labels:
+    {{- $.observed.composite.resource.metadata.labels | toYaml | nindent 6 }}
+spec:
+  deletionPolicy: Delete
+  managementPolicies:
+    - Observe
+    - Create
+    - Update
+    - Delete
+  providerConfigRef:
+    name: creds    
+  forProvider:
+    region: ap-southeast-1  
+    objectLockEnabled: {{ $.observed.composite.resource.spec.objectLockEnabled | default false }}
+    {{-  if $.observed.composite.resource.spec.tags }}
+    tags:
+      {{- $.observed.composite.resource.spec.tags | toYaml | nindent 6 }}
+    {{- end }}
+ 

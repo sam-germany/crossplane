@@ -1,0 +1,49 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xrdsoperator.infra.rwil.volkswagenag.com
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2" # Sync first
+spec:
+  group: infra.rwil.volkswagenag.com
+  names:
+    kind: XRDSOperator
+    plural: xrdsoperator
+  claimNames:
+    kind: RDSOperator
+    plural: rdsperators
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                management:
+                  type: object
+                  properties:
+                    options:
+                      type: object
+                      properties:
+                        deletion:
+                          type: boolean
+                          default: false
+                dbName:
+                  type: string
+                username:
+                  type: string
+                secretPath:
+                  type: string
+                oldPasswordSecretPath:
+                  type: string
+                providerName:
+                  type: string
+              required:
+                - dbName
+                - username
+                - secretPath
+                - providerName

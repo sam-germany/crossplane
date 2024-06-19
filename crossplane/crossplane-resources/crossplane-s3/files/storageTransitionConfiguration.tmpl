@@ -1,0 +1,20 @@
+{{- if ( .observed.composite.resource.spec.storageTransitionConfig.enabled )}}
+---
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: BucketLifecycleConfiguration
+metadata:
+  name: {{ (.observed.composite.resource.spec.name )}}-lifecycle
+  annotations:
+    gotemplating.fn.crossplane.io/composition-resource-name: lifecycle
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    bucketSelector:
+      matchControllerRef: true
+    region: ap-southeast-1
+    rule:
+{{ ( .observed.composite.resource.spec.storageTransitionConfig.rules | toYaml | indent 6)}}
+  providerConfigRef:
+    name: creds
+
+{{- end }}

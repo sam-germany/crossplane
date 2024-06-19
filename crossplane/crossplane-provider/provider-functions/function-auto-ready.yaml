@@ -1,0 +1,10 @@
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: Function
+metadata:
+  name: function-auto-ready
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "5" # Sync after XRD
+spec:
+  package: xpkg.upbound.io/upbound/function-auto-ready:v0.2.1

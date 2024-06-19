@@ -1,0 +1,27 @@
+{{- define "generateSecretYaml" }}
+{{- $host := index . 0}}
+{{- $port := index . 1}}
+{{- $password := index . 2}}
+{{- $username := index . 3}}
+host: {{ $host }}
+port: {{ $port }}
+password: {{ $password }}
+username: {{ $username }}
+{{- end }}
+
+{{- if eq ( $.observed.resources.instance | getResourceCondition "Ready").Status "True"}}
+{{ $host := (index $.observed.resources "instance").resource.status.atProvider.address }}
+{{ $port := (index $.observed.resources "instance").resource.status.atProvider.port }}
+{{ $password := index (index $.observed.resources "instance").connectionDetails "attribute.password" | b64dec }}
+{{ $username := $.observed.composite.resource.spec.masterUsername }}
+
+apiVersion: meta.gotemplating.fn.crossplane.io/v1alpha1
+kind: CompositeConnectionDetails
+data:
+  password: {{ $password | toString | b64enc}}
+  port: {{ $port | toString | b64enc }}
+  connection: {{ include "generateSecretYaml" (list $host $port $password $username) | fromYaml | toJson | b64enc }}
+  host: {{ $host | toString | b64enc}}
+  endpoint: {{ $host | toString | b64enc}}
+  username: {{ $username | toString | b64enc}}
+{{- end }}
